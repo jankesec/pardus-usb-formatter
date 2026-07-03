@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import uuid
 import signal
 import subprocess
 import sys
@@ -26,6 +27,7 @@ parser = argparse.ArgumentParser(
 parser.add_argument('-t', '--type', default="FAT32")
 parser.add_argument('-d', '--device', required=True)
 parser.add_argument('-l', '--label',default="")
+parser.add_argument('-c', '--crypt')
 parser.add_argument('-f', '--fill', default=False, action='store_true')
 parser.add_argument('-g', '--gpt', default=False, action='store_true')
 
@@ -35,6 +37,20 @@ args = parser.parse_args()
 def execute(command):
     subprocess.call(command)
     subprocess.call(["sync"])
+
+
+def create_luks(disk, name, password):
+    cmds = [
+        ["cryptsetup", "luksFormat", disk, "-"],
+        ["cryptsetup", "luksOpen", disk, name, "-"]
+    ]
+    for cmd in cmds:
+        p = subprocess.Popen(cmd,
+            stdin=subprocess.PIPE,
+        )
+        p.communicate(input=password.encode())
+        if p.returncode != 0:
+            raise Exception("Failed to run command: {}".format(" ".join(cmd)))
 
 prefix=""
 if "mmcblk" in args.device:
@@ -99,6 +115,13 @@ execute(["wipefs", "-a", f"/dev/{args.device}{prefix}1", "--force"])
 
 partition = f"/dev/{args.device}{prefix}1"
 
+luks = None
+# Crypt:
+if args.crypt:
+    luks = str(uuid.uuid4())
+    create_luks(partition, luks, args.crypt)
+    partition = f"/dev/mapper/{luks}"
+
 # Format:
 if args.type == "FAT32":
     execute(["mkfs.fat", "-F", "32", "-n", args.label, "-I", partition])
@@ -110,6 +133,11 @@ elif args.type == "EXFAT":
     execute(["mkfs.exfat", "-L", args.label, partition])
 elif args.type == "BTRFS":
     execute(["mkfs.btrfs", "-f", "-L", args.label, partition])
+
+
+# Close luks
+if luks:
+    subprocess.call(["cryptsetup", "luksClose", f"/dev/mapper/{luks}"])
 
 # Eject and uneject again to show new partition:
 subprocess.call(["eject", f"/dev/{args.device}"])

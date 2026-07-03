@@ -48,6 +48,7 @@ class MainWindow:
         # Get inserted USB devices
         self.usbDevice = []
         self.usbManager = USBDeviceManager()
+        self.cryptOk = True
         self.usbManager.setUSBRefreshSignal(self.listUSBDevices)
         self.listUSBDevices()
 
@@ -70,9 +71,15 @@ class MainWindow:
 
         # Set application:
         self.application = application
+        self.cb_encrypt.connect("toggled", self.onEncryptChanged)
 
         # Show Screen:
         self.window.show_all()
+
+    def onEncryptChanged(self, *args):
+        self.ui_revealer_encrypt.set_reveal_child(
+            self.cb_encrypt.get_active()
+        )
 
     # Window methods:
     def onDestroy(self, action):
@@ -83,6 +90,7 @@ class MainWindow:
 
         # Main
         self.txt_deviceName = self.builder.get_object("txt_deviceName")
+        self.txt_password = self.builder.get_object("txt_password")
         self.list_devices = self.builder.get_object("list_devices")
         self.cmb_devices = self.builder.get_object("cmb_devices")
         self.list_formats = self.builder.get_object("list_formats")
@@ -90,9 +98,11 @@ class MainWindow:
         self.btn_start = self.builder.get_object("btn_start")
         self.pb_writingProgress = self.builder.get_object("pb_writingProgress")
         self.btn_cancelWriting = self.builder.get_object("btn_cancelWriting")
+        self.ui_revealer_encrypt = self.builder.get_object("ui_revealer_encrypt")
 
         # Integrity
         self.cb_slowFormat = self.builder.get_object("cb_slowFormat")
+        self.cb_encrypt = self.builder.get_object("cb_encrypt")
 
         # Dialog:
         self.dialog_write = self.builder.get_object("dialog_write")
@@ -179,7 +189,8 @@ class MainWindow:
             ]
             if self.cb_slowFormat.get_active():
                 process_command += "--fill"
-
+            if self.cb_encrypt.get_active():
+                process_command += ["--crypt", self.txt_password.get_text()]
             self.startProcess(process_command)
             self.stack_windows.set_visible_child_name("waiting")
 
@@ -271,6 +282,15 @@ class MainWindow:
             self.cmb_formats.get_active_iter()
         ][0]
         newDeviceName = self.txt_deviceName.get_text()
+
+        if self.cb_encrypt.get_active():
+            if len(self.txt_password.get_text()) == 0:
+                self.show_error_dialog(
+                    _("Password required."),
+                    _("Please provide a password dor encrypt."),
+                )
+                return False
+
 
         if selectedFormat == "FAT32":
             if len(newDeviceName) > 11:
