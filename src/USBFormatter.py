@@ -4,6 +4,7 @@ import os
 import uuid
 import signal
 import subprocess
+import json
 import sys
 
 stopWriting = False
@@ -52,6 +53,27 @@ def create_luks(disk, name, password):
         if p.returncode != 0:
             raise Exception("Failed to run command: {}".format(" ".join(cmd)))
 
+def find_mounts(disk):
+    sp = subprocess.run(
+        ["lsblk", "-J", f"/dev/{disk}"],
+        stdout=subprocess.PIPE
+    )
+    data = sp.stdout.decode("utf-8")
+    data = json.loads(data)
+    ret = []
+    names = []
+    for blocks in data.get("blockdevices", []):
+        ret += blocks.get("mountpoints", [])
+        names.append(blocks.get("name"))
+        for child in blocks.get("children", []):
+            ret += child.get("mountpoints", [])
+            names.append(child.get("name"))
+            for child in child.get("children", []):
+                ret += child.get("mountpoints", [])
+                names.append(child.get("name"))
+    return {"mounts": ret, "names": names}
+
+
 prefix=""
 if "mmcblk" in args.device:
     prefix="p"
@@ -59,12 +81,22 @@ elif "nvme" in args.device:
     prefix="p"
 
 # Unmount the drive before writing on it
-subprocess.call(["umount", f"{args.device}{prefix}1"])
+mounts =  find_mounts(args.device)
+
+for mp in mounts.get("mounts"):
+    subprocess.run(["umount", "-f", mp], check=True)
+
+for n in mounts.get("names"):
+    if os.path.exists(f"/dev/mapper/{n}"):
+        subprocess.run(["dmsetup", "remove", n], check=True)
 
 # Erase MBR
 with open(f"/dev/{args.device}", "wb") as f:
     f.write(b"\0"*4096)
     f.flush()
+
+subprocess.call(["partprobe", f"/dev/{args.device}"])
+
 
 # Fill with zeros:
 if args.fill:
