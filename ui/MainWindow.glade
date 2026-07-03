@@ -232,6 +232,9 @@ Do you want to continue?</property>
       <row>
         <col id="0">EXFAT</col>
       </row>
+      <row>
+        <col id="0">BTRFS</col>
+      </row>
     </data>
   </object>
   <object class="GtkApplicationWindow" id="window">

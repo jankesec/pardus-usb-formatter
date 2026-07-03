@@ -167,16 +167,20 @@ class MainWindow:
         response = self.dialog_write.run()
         self.dialog_write.hide()
         if response == Gtk.ResponseType.YES:
-            self.startProcess(
-                [
-                    "pkexec",
-                    os.path.dirname(os.path.abspath(__file__)) + "/USBFormatter.py",
-                    "/dev/" + self.usbDevice[0],
-                    selectedFormat,
-                    "1" if self.cb_slowFormat.get_active() else "0",
-                    self.txt_deviceName.get_text(),
-                ]
-            )
+            process_command = [
+                "pkexec",
+                os.path.dirname(os.path.abspath(__file__)) + "/USBFormatter.py",
+                "--device",
+                self.usbDevice[0],
+                "--type",
+                selectedFormat,
+                "--label",
+                self.txt_deviceName.get_text(),
+            ]
+            if self.cb_slowFormat.get_active():
+                process_command += "--fill"
+
+            self.startProcess(process_command)
             self.stack_windows.set_visible_child_name("waiting")
 
     # Handling Image Writer process

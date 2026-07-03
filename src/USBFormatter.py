@@ -7,6 +7,7 @@ import sys
 
 stopWriting = False
 
+import argparse
 
 def receiveSignal(number, frame):
     global stopWriting
@@ -16,32 +17,44 @@ def receiveSignal(number, frame):
 
 signal.signal(signal.SIGTERM, receiveSignal)
 
-device = sys.argv[1]
-selectedFormat = sys.argv[2]
-isSlow = sys.argv[3] == "1"
-deviceName = sys.argv[4] if sys.argv[4] else ""
-blockName = device.split("/")[-1]
+parser = argparse.ArgumentParser(
+        prog='Pardus USB Formatter',
+        description='Format USB flash drives',
+        epilog='USB Format tool for pardus'
+)
 
-partition = f"{device}1"
-partitionType = selectedFormat if selectedFormat != "EXFAT" else "NTFS"
+parser.add_argument('-t', '--type', default="FAT32")
+parser.add_argument('-d', '--device', required=True)
+parser.add_argument('-l', '--label',default="")
+parser.add_argument('-f', '--fill', default=False, action='store_true')
+parser.add_argument('-g', '--gpt', default=False, action='store_true')
+
+args = parser.parse_args()
 
 
 def execute(command):
     subprocess.call(command)
     subprocess.call(["sync"])
 
+prefix=""
+if "mmcblk" in args.device:
+    prefix="p"
+elif "nvme" in args.device:
+    prefix="p"
 
 # Unmount the drive before writing on it
-subprocess.call(["umount", f"{partition}"])
+subprocess.call(["umount", f"{args.device}{prefix}1"])
 
 # Erase MBR
-execute(["dd", "if=/dev/zero", f"of={device}", "bs=4096", "count=1"])
+with open(f"/dev/{args.device}", "wb") as f:
+    f.write(b"\0"*4096)
+    f.flush()
 
 # Fill with zeros:
-if isSlow:
+if args.fill:
     writtenBytes = 0
-    blockCount = int(open(f"/sys/block/{blockName}/size").readline())
-    blockSize = int(open(f"/sys/block/{blockName}/queue/logical_block_size").readline())
+    blockCount = int(open(f"/sys/block/{args.device}/size").readline())
+    blockSize = int(open(f"/sys/block/{args.device}/queue/logical_block_size").readline())
     totalFileBytes = blockCount * blockSize
 
     writeFile = open(device, "wb")
@@ -73,26 +86,33 @@ if isSlow:
         writeFile.close()
 
 # Make the partition table:
-execute(["parted", device, "mktable", "msdos"])
+execute(["parted", f"/dev/{args.device}", "mktable", "gpt" if args.gpt else "msdos"])
 
 # Create a partition:
-execute(["parted", device, "mkpart", "primary", partitionType, "1", "100%"])
+part_type = args.type
+if part_type not in ["FAT32", "EXT4", "NTFS", "EXTFAT"]:
+    part_type = "EXT4"
+execute(["parted", f"/dev/{args.device}", "mkpart", "primary", part_type, "1", "100%"])
 
 # Remove old fs:
-execute(["wipefs", "-a", partition, "--force"])
+execute(["wipefs", "-a", f"/dev/{args.device}{prefix}1", "--force"])
+
+partition = f"/dev/{args.device}{prefix}1"
 
 # Format:
-if selectedFormat == "FAT32":
-    execute(["mkfs.fat", "-F", "32", "-n", deviceName, "-I", partition])
-elif selectedFormat == "EXT4":
-    execute(["mkfs.ext4", "-L", deviceName, partition])
-elif selectedFormat == "NTFS":
-    execute(["mkfs.ntfs", "-f", "-L", deviceName, partition])
-elif selectedFormat == "EXFAT":
-    execute(["mkfs.exfat", "-L", deviceName, partition])
+if args.type == "FAT32":
+    execute(["mkfs.fat", "-F", "32", "-n", args.label, "-I", partition])
+elif args.type == "EXT4":
+    execute(["mkfs.ext4", "-L", args.label, partition])
+elif args.type == "NTFS":
+    execute(["mkfs.ntfs", "-f", "-L", args.label, partition])
+elif args.type == "EXFAT":
+    execute(["mkfs.exfat", "-L", args.label, partition])
+elif args.type == "BTRFS":
+    execute(["mkfs.btrfs", "-f", "-L", args.label, partition])
 
 # Eject and uneject again to show new partition:
-subprocess.call(["eject", device])
-subprocess.call(["eject", "-t", device])
+subprocess.call(["eject", f"/dev/{args.device}"])
+subprocess.call(["eject", "-t", f"/dev/{args.device}"])
 
 exit(0)
