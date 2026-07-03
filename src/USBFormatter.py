@@ -84,7 +84,8 @@ elif "nvme" in args.device:
 mounts =  find_mounts(args.device)
 
 for mp in mounts.get("mounts"):
-    subprocess.run(["umount", "-f", mp], check=True)
+    if os.path.exists(str(mp)):
+        subprocess.run(["umount", "-f", mp], check=True)
 
 for n in mounts.get("names"):
     if os.path.exists(f"/dev/mapper/{n}"):
