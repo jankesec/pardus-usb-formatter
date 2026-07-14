@@ -287,7 +287,7 @@ class MainWindow:
             if len(self.txt_password.get_text()) == 0:
                 self.show_error_dialog(
                     _("Password required."),
-                    _("Please provide a password dor encrypt."),
+                    _("Please provide a password for encrypt."),
                 )
                 return False
 
