@@ -1,3 +1,20 @@
+pardus-usb-formatter (0.7.0) unstable; urgency=medium
+
+  [ Ali Riza KESKIN ]
+  * USBFormatter use argparse and btrfs support
+  * luks encrypt support added
+  * find /dev/mapper/xxx and remove before format
+  * check exists before umount
+
+  [ Fatih Altun ]
+  * Fix typo
+  * Update pot file
+  * Update Turkish translations
+  * Fix typo on pt.po
+  * Add missing password visibility icon signals
+
+ -- Fatih Altun <fatih.altun@pardus.org.tr>  Wed, 15 Jul 2026 00:34:35 +0300
+
 pardus-usb-formatter (0.6.2) unstable; urgency=medium
 
   * Update app screenshots
