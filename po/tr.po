@@ -3,22 +3,22 @@
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 # Emin fedar <emin.fedar@pardus.org.tr>, 2020.
-# Fatih Altun <fatih.altun@pardus.org.tr>, 2023-2024.
+# Fatih Altun <fatih.altun@pardus.org.tr>, 2023-2026.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: 0.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-03 14:37+0300\n"
-"PO-Revision-Date: 2024-03-18 11:37+0300\n"
+"POT-Creation-Date: 2026-07-15 00:03+0300\n"
+"PO-Revision-Date: 2026-07-15 00:03+0300\n"
 "Last-Translator: Fatih Altun <fatih.altun@pardus.org.tr>\n"
 "Language-Team: Turkish <dev@pardus.org.tr>\n"
 "Language: tr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=1; plural=0\n"
-"X-Generator: Gtranslator 42.0\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Gtranslator 48.0\n"
 
 #: ui/MainWindow.glade:14
 msgid "Format USB Devices easily."
@@ -123,7 +123,7 @@ msgid "Password required."
 msgstr "Parola gerekli."
 
 #: src/MainWindow.py:290
-msgid "Please provide a password dor encrypt."
+msgid "Please provide a password for encrypt."
 msgstr "Lütfen şifreleme için bir parola belirleyin."
 
 #: src/MainWindow.py:298 src/MainWindow.py:318 src/MainWindow.py:326
