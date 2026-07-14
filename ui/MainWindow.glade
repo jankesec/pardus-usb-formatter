@@ -545,6 +545,8 @@ Do you want to continue?</property>
                             <property name="secondary-icon-name">view-reveal-symbolic</property>
                             <property name="placeholder-text" translatable="yes">Disk password</property>
                             <property name="input-purpose">password</property>
+                            <signal name="icon-press" handler="on_txt_password_icon_press" swapped="no"/>
+                            <signal name="icon-release" handler="on_txt_password_icon_release" swapped="no"/>
                           </object>
                           <packing>
                             <property name="expand">True</property>

@@ -144,6 +144,14 @@ class MainWindow:
             self.btn_start.set_sensitive(False)
 
     # Buttons:
+    def on_txt_password_icon_press(self, entry, icon_pos, event):
+        entry.set_visibility(True)
+        entry.set_icon_from_icon_name(icon_pos, "view-conceal-symbolic")
+
+    def on_txt_password_icon_release(self, entry, icon_pos, event):
+        entry.set_visibility(False)
+        entry.set_icon_from_icon_name(icon_pos, "view-reveal-symbolic")
+
     def btn_start_clicked(self, button):
         if self.formatting_rule_checks():
             self.pb_writingProgress.set_visible(self.cb_slowFormat.get_active())
