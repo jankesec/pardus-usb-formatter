@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-03 14:37+0300\n"
+"POT-Creation-Date: 2026-07-15 00:03+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -116,7 +116,7 @@ msgid "Password required."
 msgstr ""
 
 #: src/MainWindow.py:290
-msgid "Please provide a password dor encrypt."
+msgid "Please provide a password for encrypt."
 msgstr ""
 
 #: src/MainWindow.py:298 src/MainWindow.py:318 src/MainWindow.py:326
