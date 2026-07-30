@@ -1,15 +1,14 @@
 # Portuguese translation for pardus-usb-formatter.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the pardus-usb-formatter package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-# Hugo Carvalho <hugokarvalho@hotmail.com>, 2022, 2023, 2024.
+# Hugo Carvalho <hugokarvalho@hotmail.com>, 2022, 2023, 2024, 2025, 2026.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-15 00:03+0300\n"
-"PO-Revision-Date: 2024-03-18 16:20+0000\n"
+"PO-Revision-Date: 2026-07-17 16:14+0100\n"
 "Last-Translator: Hugo Carvalho <hugokarvalho@hotmail.com>\n"
 "Language-Team: Portuguese <hugokarvalho@hotmail.com>\n"
 "Language: pt\n"
@@ -17,11 +16,11 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 3.2.2\n"
+"X-Generator: Poedit 3.4.2\n"
 
 #: ui/MainWindow.glade:14
 msgid "Format USB Devices easily."
-msgstr "Formatar facilmente dispositivos USB."
+msgstr "Formate dispositivos USB com facilidade."
 
 #. Name Surname <example@examplemail.com>
 #: ui/MainWindow.glade:18
@@ -64,11 +63,11 @@ msgstr "Formatação lenta (Definir todos os bytes para 0)"
 
 #: ui/MainWindow.glade:503
 msgid "Encrypt Disk"
-msgstr ""
+msgstr "Encriptar disco"
 
 #: ui/MainWindow.glade:546
 msgid "Disk password"
-msgstr ""
+msgstr "Palavra-passe do disco"
 
 #: ui/MainWindow.glade:576
 msgid "Start"
@@ -120,11 +119,11 @@ msgstr ""
 
 #: src/MainWindow.py:289
 msgid "Password required."
-msgstr ""
+msgstr "É necessária uma palavra-passe."
 
 #: src/MainWindow.py:290
 msgid "Please provide a password for encrypt."
-msgstr ""
+msgstr "Introduza uma palavra-passe para a encriptação."
 
 #: src/MainWindow.py:298 src/MainWindow.py:318 src/MainWindow.py:326
 #: src/MainWindow.py:337
