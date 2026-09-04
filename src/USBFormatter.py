@@ -6,6 +6,8 @@ import signal
 import subprocess
 import json
 import sys
+import re
+import stat
 
 stopWriting = False
 
@@ -73,6 +75,95 @@ def find_mounts(disk):
                 names.append(child.get("name"))
     return {"mounts": ret, "names": names}
 
+
+def validate_device_and_label(raw_device, raw_label):
+    if raw_label:
+        if any(c in raw_label for c in "\n\r\0"):
+            sys.stderr.write("Error: Disk label contains invalid control characters.\n")
+            sys.exit(1)
+
+    if not raw_device or not isinstance(raw_device, str):
+        sys.stderr.write("Error: Device argument cannot be empty.\n")
+        sys.exit(1)
+
+    dev_name = raw_device.strip()
+    if dev_name.startswith("/dev/"):
+        dev_name = dev_name[5:]
+
+    # 1. Enforce strict device name format (no path traversal '..', slashes, or shell chars)
+    if not re.match(r"^[a-zA-Z0-9_-]+$", dev_name):
+        sys.stderr.write(f"Error: Invalid device name format: '{raw_device}'.\n")
+        sys.exit(1)
+
+    canonical_path = os.path.realpath(f"/dev/{dev_name}")
+    canonical_dev_dir = os.path.realpath("/dev")
+    if not (canonical_path.startswith(canonical_dev_dir + "/") or canonical_path == canonical_dev_dir):
+        sys.stderr.write(f"Error: Device path '{canonical_path}' is outside /dev.\n")
+        sys.exit(1)
+
+    if not os.path.exists(canonical_path):
+        sys.stderr.write(f"Error: Device '{canonical_path}' does not exist.\n")
+        sys.exit(1)
+
+    st = os.stat(canonical_path)
+    if not stat.S_ISBLK(st.st_mode):
+        sys.stderr.write(f"Error: '{canonical_path}' is not a block device.\n")
+        sys.exit(1)
+
+    # 2. Must be a whole disk device (sysfs entry must exist in /sys/block/<name>)
+    sysfs_block = f"/sys/block/{dev_name}"
+    if not os.path.isdir(sysfs_block):
+        sys.stderr.write(f"Error: '{dev_name}' is not a whole disk device.\n")
+        sys.exit(1)
+
+    # 3. Check critical mount points
+    critical_mounts = {"/", "/boot", "/boot/efi", "/home", "/usr", "/var", "/etc"}
+    try:
+        mounts_info = find_mounts(dev_name)
+        for mp in mounts_info.get("mounts", []):
+            if mp in critical_mounts:
+                sys.stderr.write(
+                    f"Error: Refusing to format device containing critical system mount: '{mp}'.\n"
+                )
+                sys.exit(1)
+    except Exception:
+        pass
+
+    # 4. Check active swap
+    if os.path.exists("/proc/swaps"):
+        try:
+            with open("/proc/swaps", "r") as f:
+                if f"/dev/{dev_name}" in f.read():
+                    sys.stderr.write(
+                        f"Error: Refusing to format device used as active swap: '/dev/{dev_name}'.\n"
+                    )
+                    sys.exit(1)
+        except OSError:
+            pass
+
+    # 5. Verify removable or USB drive
+    real_sysfs = os.path.realpath(sysfs_block)
+    is_usb = any("usb" in part.lower() for part in real_sysfs.split(os.sep))
+
+    is_removable = False
+    removable_file = os.path.join(sysfs_block, "removable")
+    if os.path.exists(removable_file):
+        try:
+            with open(removable_file, "r") as f:
+                is_removable = (f.read().strip() == "1")
+        except OSError:
+            pass
+
+    if not (is_usb or is_removable):
+        sys.stderr.write(
+            f"Error: Device '{dev_name}' is not recognized as a removable or USB drive.\n"
+        )
+        sys.exit(1)
+
+    return dev_name
+
+
+args.device = validate_device_and_label(args.device, args.label)
 
 prefix=""
 if "mmcblk" in args.device:
