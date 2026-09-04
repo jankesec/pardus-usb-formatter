@@ -196,7 +196,7 @@ class MainWindow:
                 self.txt_deviceName.get_text(),
             ]
             if self.cb_slowFormat.get_active():
-                process_command += "--fill"
+                process_command += ["--fill"]
             if self.cb_encrypt.get_active():
                 process_command += ["--crypt", self.txt_password.get_text()]
             self.startProcess(process_command)

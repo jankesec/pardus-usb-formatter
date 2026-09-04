@@ -83,13 +83,19 @@ elif "nvme" in args.device:
 # Unmount the drive before writing on it
 mounts =  find_mounts(args.device)
 
-for mp in mounts.get("mounts"):
-    if os.path.exists(str(mp)):
-        subprocess.run(["umount", "-f", mp], check=True)
+for mp in mounts.get("mounts", []):
+    if mp and os.path.exists(str(mp)):
+        try:
+            subprocess.run(["umount", "-f", str(mp)], check=False)
+        except Exception:
+            pass
 
-for n in mounts.get("names"):
-    if os.path.exists(f"/dev/mapper/{n}"):
-        subprocess.run(["dmsetup", "remove", n], check=True)
+for n in mounts.get("names", []):
+    if n and os.path.exists(f"/dev/mapper/{n}"):
+        try:
+            subprocess.run(["dmsetup", "remove", str(n)], check=False)
+        except Exception:
+            pass
 
 # Erase MBR
 with open(f"/dev/{args.device}", "wb") as f:
@@ -102,11 +108,13 @@ subprocess.call(["partprobe", f"/dev/{args.device}"])
 # Fill with zeros:
 if args.fill:
     writtenBytes = 0
-    blockCount = int(open(f"/sys/block/{args.device}/size").readline())
-    blockSize = int(open(f"/sys/block/{args.device}/queue/logical_block_size").readline())
+    with open(f"/sys/block/{args.device}/size", "r") as f:
+        blockCount = int(f.readline().strip())
+    with open(f"/sys/block/{args.device}/queue/logical_block_size", "r") as f:
+        blockSize = int(f.readline().strip())
     totalFileBytes = blockCount * blockSize
 
-    writeFile = open(device, "wb")
+    writeFile = open(f"/dev/{args.device}", "wb")
 
     oldMB = 0
     zeros = bytes([0] * blockSize)
@@ -139,7 +147,7 @@ execute(["parted", f"/dev/{args.device}", "mktable", "gpt" if args.gpt else "msd
 
 # Create a partition:
 part_type = args.type
-if part_type not in ["FAT32", "EXT4", "NTFS", "EXTFAT"]:
+if part_type not in ["FAT32", "EXT4", "NTFS", "EXFAT", "BTRFS"]:
     part_type = "EXT4"
 execute(["parted", f"/dev/{args.device}", "mkpart", "primary", part_type, "1", "100%"])
 
