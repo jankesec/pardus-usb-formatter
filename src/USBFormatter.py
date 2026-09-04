@@ -6,6 +6,7 @@ import signal
 import subprocess
 import json
 import sys
+import getpass
 
 stopWriting = False
 
@@ -28,11 +29,24 @@ parser = argparse.ArgumentParser(
 parser.add_argument('-t', '--type', default="FAT32")
 parser.add_argument('-d', '--device', required=True)
 parser.add_argument('-l', '--label',default="")
-parser.add_argument('-c', '--crypt')
+parser.add_argument('-c', '--crypt', nargs='?', const=True, default=False)
 parser.add_argument('-f', '--fill', default=False, action='store_true')
 parser.add_argument('-g', '--gpt', default=False, action='store_true')
 
 args = parser.parse_args()
+
+password = None
+if args.crypt:
+    if isinstance(args.crypt, str):
+        password = args.crypt
+    elif sys.stdin.isatty():
+        password = getpass.getpass("Enter LUKS passphrase: ")
+    else:
+        password = sys.stdin.readline().rstrip("\r\n")
+
+    if not password:
+        sys.stderr.write("Error: Encryption password cannot be empty.\n")
+        sys.exit(1)
 
 
 def execute(command):
@@ -160,7 +174,7 @@ luks = None
 # Crypt:
 if args.crypt:
     luks = str(uuid.uuid4())
-    create_luks(partition, luks, args.crypt)
+    create_luks(partition, luks, password)
     partition = f"/dev/mapper/{luks}"
 
 # Format:

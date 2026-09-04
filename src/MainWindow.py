@@ -197,22 +197,30 @@ class MainWindow:
             ]
             if self.cb_slowFormat.get_active():
                 process_command += ["--fill"]
+            password = None
             if self.cb_encrypt.get_active():
-                process_command += ["--crypt", self.txt_password.get_text()]
-            self.startProcess(process_command)
+                process_command += ["--crypt"]
+                password = self.txt_password.get_text()
+            self.startProcess(process_command, input_data=password)
             self.stack_windows.set_visible_child_name("waiting")
 
     # Handling Image Writer process
-    def startProcess(self, params):
-        self.writerProcessPID, _, stdout, _ = GLib.spawn_async(
+    def startProcess(self, params, input_data=None):
+        self.writerProcessPID, stdin_fd, stdout, _ = GLib.spawn_async(
             params,
             flags=GLib.SPAWN_SEARCH_PATH
             | GLib.SPAWN_LEAVE_DESCRIPTORS_OPEN
             | GLib.SPAWN_DO_NOT_REAP_CHILD,
-            standard_input=False,
+            standard_input=input_data is not None,
             standard_output=True,
             standard_error=True,
         )
+        if input_data is not None and stdin_fd is not None:
+            try:
+                os.write(stdin_fd, (input_data + "\n").encode("utf-8"))
+                os.close(stdin_fd)
+            except OSError:
+                pass
         GLib.io_add_watch(
             GLib.IOChannel(stdout),
             GLib.PRIORITY_LOW,
